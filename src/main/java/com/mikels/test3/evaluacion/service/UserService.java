@@ -1,12 +1,11 @@
 package com.mikels.test3.evaluacion.service;
 
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
+// import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.mikels.test3.evaluacion.models.User;
@@ -34,14 +33,16 @@ public class UserService {
         } catch (BadCredentialsException e) {
             return null;
         }
-        final UserDetails userDetails = userRepository.loadUserByUsername(loginRequest.getUsername());
-        return jwtUtil.generateToken(userDetails.getUsername());
+        final User user = userRepository.findByUsername(loginRequest.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "User not found with username: " + loginRequest.getUsername()));
+        return jwtUtil.generateToken(user.getUsername());
     }
 
     public void createUser(UserSignUpRequest signUpRequest) {
         User user = new User();
         user.setUsername(signUpRequest.getUsername());
-        user.setPassword(signUpRequest.getPassword()); // Esto debería ser hasheado y no almacenado en texto plano
+        user.setPassword(signUpRequest.getPassword()); // TODO: Esto debería ser hasheado y no almacenado en texto plano
         userRepository.save(user);
     }
 
